@@ -1,0 +1,4 @@
+interface:
+  display_name: "CLIP-seq Workflow"
+  short_description: "CLIP/eCLIP alignment, UMI dedup, peak & motif calling"
+  default_prompt: "You run CLIP/eCLIP analysis from raw FASTQ to peaks and motifs."

@@ -5,37 +5,26 @@ description: "End-to-end CLIP/eCLIP (and related CLIP/iCLIP/PAR-CLIP) processing
 
 # CLIP-seq Workflow
 
-Concise operating guide for CLIP/eCLIP-style datasets. Use this when you need to trim adapters/UMIs, map reads, deduplicate, call peaks, make bigWigs, and run motif/annotation steps.
+Concise operating guide for CLIP/eCLIP-style datasets **without Nextflow**. Run the steps yourself with the listed tools: trim adapters/UMIs, map reads, deduplicate, call peaks, make bigWigs, and run motif/annotation.
 
-## Quick Start (happy path)
-1. **Set project vars**: samples, genome fasta + index, annotation, chrom sizes.  
-2. **QC + trim**: FastQC → cutadapt (remove 5'/3' adapters; trim UMI if present) → optional low-complexity filter.  
-3. **Align**: STAR (spliced) or Bowtie2/Bowtie1 (short inserts); remember eCLIP orientation: `--readFilesIn R2 R1` (R2 = forward).  
-4. **Deduplicate**: `umi_tools dedup` (paired, adjacency, edit-distance 1).  
-5. **QC**: `samtools flagstat`, `plotFingerprint`, correlation heatmap.  
-6. **Peaks**: PEAKachu (with control) or PureCLIP (no control).  
-7. **Motifs/annotation**: extend peaks ±20 bp → fasta → MEME-ChIP; annotate with RNA-Centric Annotation System (RCAS).  
-8. **Tracks**: `bamCoverage --filterRNAstrand {forward,reverse} --normalizeUsing CPM` to bigWig.
+## Quick Start (manual flow)
+1. **Set project vars**: sample names, genome fasta/index, GTF, chrom sizes, output folders.  
+2. **QC + trim**: FastQC → cutadapt (5'/3' adapters + UMI trim) → optional low-complexity filter (fastp/prinseq).  
+3. **Align**: STAR (spliced) or Bowtie2 local (short inserts). eCLIP orientation: `R2 forward / R1 reverse`; pass to STAR/Bowtie as `--readFilesIn R2 R1`.  
+4. **Dedup UMIs**: `umi_tools extract` (if present) → `umi_tools dedup --paired --method adjacency`.  
+5. **QC after map**: `samtools flagstat`, deepTools `plotFingerprint` and `plotCorrelation`.  
+6. **Peaks**: PEAKachu (needs control) or PureCLIP (no control, nucleotide resolution).  
+7. **Motifs/annotation**: extend peaks ±20 bp → `bedtools getfasta` → MEME-ChIP; annotate with RCAS.  
+8. **Tracks**: deepTools `bamCoverage --filterRNAstrand {forward,reverse} --normalizeUsing CPM` to bigWig.
 
-Full command templates and parameters: see `references/pipeline.md`.
+Command templates for each step live in `references/pipeline.md` (bash-friendly loops over samples).
 
-## nf-core/clipseq one-liner
-- Pipeline: Nextflow DSL1 (requires Nextflow ≤22.10.6).  
-- Samplesheet (single-end only): CSV with headers `sample,fastq` (one row per replicate). Example:  
-  ```
-  sample,fastq
-  exp1_rep1,clip0001_01.fastq.gz
-  exp1_rep2,clip0001_02.fastq.gz
-  ```
-- Run (uses containers):  
-  ```bash
-  nextflow run nf-core/clipseq -r 1.0.0 \
-    -profile docker,test        # replace test with docker/singularity/... or institute profile
-    --input design.csv \
-    --fasta /path/genome.fa \
-    --outdir results
-  ```
-- Defaults: Cutadapt → rRNA/tRNA pre-map (Bowtie2) → STAR align → UMI-tools dedup → crosslink/bedgraph → peak calling (iCount/Paraclu/PureCLIP/Piranha) → motif (DREME) → QC (FastQC/Preseq/RSeQC/MultiQC).
+## Tool picks (swap as needed)
+- **Adapters/UMIs**: cutadapt for trimming; `umi_tools extract` when UMIs exist. For heavy adapter content/low-complexity, add fastp/prinseq.  
+- **Aligner**: STAR for spliced/transcriptome-aware; Bowtie2 local for short inserts or heavy adapter bleed; Bowtie1 only if legacy pipeline required.  
+- **Peak callers**: PEAKachu (requires control; DESeq2-based), PureCLIP (single-sample, nucleotide-level), CLIPper/Piranha as alternates.  
+- **Motif/annotation**: MEME-ChIP for motifs; RCAS for functional annotation.  
+- **Tracks**: deepTools `bamCoverage` strand-specific CPM.
 
 ## Decision Notes
 - **Adapters/UMIs**: Required for CLIP. If UMIs are in R2 5' (common eCLIP), extract with `umi_tools extract --bc-pattern=NNNNN --read2-in`. Drop first 5 bp of R1 to avoid UMI bleed-through if protocol matches ENCODE eCLIP.

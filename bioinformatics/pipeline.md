@@ -82,6 +82,47 @@ bamCoverage -b sample.sorted.bam -o sample.CPM.bw --normalizeUsing CPM --binSize
 ```
 - Peak / site calling: follow study-specific tool (e.g., PureCLIP/CLIPper) if needed.
 
+## 6) Repeat element enrichment (optional)
+1) Download RepeatMasker BED for your assembly (UCSC table browser -> rmsk -> BED6).
+2) Intersect peaks or aligned reads with repeats:
+```bash
+bedtools intersect -wa -u -a peaks.bed -b rmsk.bed \
+  | cut -f4 \
+  | sort | uniq -c | sort -k1,1nr > repeat_enrichment.txt
+```
+3) For read-level enrichment use `bedtools coverage -a rmsk.bed -b sample.sorted.bam`.
+
+## 7) Metaplot around features (deepTools)
+Use peaks or TSS as reference regions:
+```bash
+# build matrix over TSS (example Gencode)
+computeMatrix reference-point \
+  --referencePoint TSS \
+  -b 2000 -a 2000 \
+  -S sample.CPM.bw \
+  -R genes.tss.bed \
+  -out tss.mat.gz
+
+plotProfile -m tss.mat.gz -out tss_metaplot.pdf --perGroup
+```
+For gene-body plots, switch to `scale-regions` with `-m 3000 -b 2000 -a 2000`.
+
+## 8) Motif analysis around binding sites
+1) Generate summit-centered FASTA (e.g., +/-50 bp):
+```bash
+bedtools slop -i peaks.bed -g chrom.sizes -b 50 > peaks.100bp.bed
+bedtools getfasta -fi genome.fa -bed peaks.100bp.bed -fo peaks.100bp.fa
+```
+2) Run MEME-ChIP:
+```bash
+meme-chip -oc meme_out -meme-nmotifs 10 -db JASPAR.meme peaks.100bp.fa
+```
+   or HOMER:
+```bash
+findMotifsGenome.pl peaks.100bp.bed genome.fa homer_out -len 6,8,10
+```
+3) Use central enrichment (centrimo) or E-value to pick candidates; cross-check with known RNA-binding motifs if applicable.
+
 ## 6) SLURM example (trimming → rRNA → genome)
 ```bash
 #!/bin/bash
@@ -111,7 +152,7 @@ samtools index sample.sorted.bam
 rm sample.sam
 ```
 
-## 7) Common pitfalls
+## 9) Common pitfalls
 - Adapter mismatch (e.g., mm9 vs mm10 index) → off-chrom/"isolated gene" hits; always match assemblies across genome, rRNA, and annotation.
 - Forgetting polyA trimming leaves long tails, causing alignment failures.
 - Missing rRNA filter inflates duplicate/low-complexity reads and lowers unique mapping.

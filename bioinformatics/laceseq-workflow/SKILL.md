@@ -34,6 +34,9 @@ samtools index sample.sorted.bam
 - Mapping stats: `samtools flagstat`, `samtools idxstats`.
 - Replicate concordance: deepTools `multiBamSummary` + `plotCorrelation`.
 - Coverage: `bamCoverage -b sample.sorted.bam -o sample.CPM.bw --normalizeUsing CPM --binSize 10` (unstranded unless library says otherwise).
+- Repeat enrich: intersect peaks with RepeatMasker BED; see reference.
+- Metaplot: deepTools `computeMatrix` + `plotProfile` over TSS/peaks.
+- Motif: extract +/-50 bp around peaks, run MEME-ChIP or HOMER.
 
 ## Troubleshooting
 - Off-chrom/“isolated gene” spikes: usually assembly mismatch (mm9/mm10, hg19/hg38) or untrimmed poly(A); realign with consistent indexes and confirm trimming.
@@ -41,4 +44,4 @@ samtools index sample.sorted.bam
 - Strand assumptions: LACE-seq often treated as unstranded; only make stranded tracks if protocol notes specify.
 
 ## Reference
-- Detailed, commented pipeline with SLURM script and pitfalls: [references/pipeline.md](references/pipeline.md)
+- Detailed, commented pipeline (trim variants, rRNA/genome map), repeat enrichment, metaplot, motif steps, SLURM script, and pitfalls: [references/pipeline.md](references/pipeline.md)

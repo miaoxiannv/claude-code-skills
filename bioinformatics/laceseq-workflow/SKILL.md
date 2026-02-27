@@ -5,14 +5,19 @@ description: "End-to-end LACE/PARN-LACE-seq preprocessing: adapter + poly(A) tri
 
 # LACE-seq Workflow
 
-Concise steps to clean LACE/PARN-LACE-seq single-end reads (~50 bp), remove rRNA, map with Bowtie1, and produce QC/coverage outputs, plus repeat/metaplot/motif downstreams.
+Concise steps to clean LACE/PARN-LACE-seq single-end reads (~50 bp), remove rRNA, map with Bowtie1, and produce QC/coverage outputs, plus repeat/metaplot/motif downstreams. Optimized for single-end LACE libraries; swap parameters explicitly if your library differs.
 
-## Quick Start
-- Inspect a read subset to confirm adapters and any 5' random 4 nt.
-- Trim adapters + poly(A) with cutadapt; run both “Cut4bp” (drop 5' 4 nt) and “Keep4bp” (retain) if unsure, then compare mapping.
-- Bowtie1: rRNA filter (`--un` keeps desired reads) → genome align (`-v 2 -m 10 --best --strata`), then sort/index BAM.
-- QC: `flagstat`, `idxstats`, deepTools correlation; generate CPM bigWig with `bamCoverage`.
-- If off-chrom hits appear, verify genome/rRNA/annotation assemblies match (mm10 vs mm9, hg38 vs hg19) and confirm poly(A) was trimmed.
+## Inputs & prerequisites
+- Reads: single-end FASTQ (gz ok), ~50 bp typical; if paired, adjust Bowtie flags.
+- Indexes: Bowtie1 genome + rRNA built from the **same assembly** (mm10↔mm10, hg38↔hg38).
+- Tools: cutadapt, bowtie (v1), samtools, deeptools, bedtools, MEME Suite or HOMER.
+
+## Quick Start (per sample)
+- Inspect ~2k reads to verify adapters and optional 5' 4 nt.
+- Trim adapters + poly(A) with cutadapt; if unsure about 5' random bases, run both “Cut4bp” and “Keep4bp” branches.
+- rRNA filter with Bowtie1 (`--un` keeps desired reads) → genome align (`-v 2 -m 10 --best --strata`), then sort/index BAM.
+- QC: `flagstat`, `idxstats`, deepTools correlation; generate CPM bigWig via `bamCoverage`.
+- Downstream (optional): repeat enrichment, metaplot with outlier filtering, motif discovery (MEME-ChIP/HOMER).
 
 ## Core Commands (per sample)
 ```bash

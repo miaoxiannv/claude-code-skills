@@ -93,7 +93,7 @@ bedtools intersect -wa -u -a peaks.bed -b rmsk.bed \
 3) For read-level enrichment use `bedtools coverage -a rmsk.bed -b sample.sorted.bam`.
 
 ## 7) Metaplot around features (deepTools)
-Use peaks or TSS as reference regions:
+Use peaks or TSS as reference regions; include outlier filtering to stabilize profiles.
 ```bash
 # build matrix over TSS (example Gencode)
 computeMatrix reference-point \
@@ -104,6 +104,11 @@ computeMatrix reference-point \
   -out tss.mat.gz
 
 plotProfile -m tss.mat.gz -out tss_metaplot.pdf --perGroup
+
+# optional: remove extreme bins (e.g., top 20% signal) to clean artifacts
+computeMatrixOperations filterValues \
+  -m tss.mat.gz -o tss.mat.clean.gz --max 0.2
+plotProfile -m tss.mat.clean.gz -out tss_metaplot_clean.pdf --perGroup
 ```
 For gene-body plots, switch to `scale-regions` with `-m 3000 -b 2000 -a 2000`.
 
@@ -153,7 +158,7 @@ rm sample.sam
 ```
 
 ## 9) Common pitfalls
-- Adapter mismatch (e.g., mm9 vs mm10 index) → off-chrom/"isolated gene" hits; always match assemblies across genome, rRNA, and annotation.
+- Adapter mismatch (e.g., mm9 vs mm10 index) → off-chrom hits; always match assemblies across genome, rRNA, and annotation.
 - Forgetting polyA trimming leaves long tails, causing alignment failures.
 - Missing rRNA filter inflates duplicate/low-complexity reads and lowers unique mapping.
 - Wrong strand assumption: LACE-seq often treated as unstranded; check library notes before making stranded bigWigs.

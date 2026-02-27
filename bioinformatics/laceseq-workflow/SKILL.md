@@ -5,14 +5,14 @@ description: "End-to-end LACE/PARN-LACE-seq preprocessing: adapter + poly(A) tri
 
 # LACE-seq Workflow
 
-Concise steps to clean LACE/PARN-LACE-seq single-end reads (~50 bp), remove rRNA, map with Bowtie1, and produce QC/coverage outputs.
+Concise steps to clean LACE/PARN-LACE-seq single-end reads (~50 bp), remove rRNA, map with Bowtie1, and produce QC/coverage outputs, plus repeat/metaplot/motif downstreams.
 
 ## Quick Start
 - Inspect a read subset to confirm adapters and any 5' random 4 nt.
 - Trim adapters + poly(A) with cutadapt; run both “Cut4bp” (drop 5' 4 nt) and “Keep4bp” (retain) if unsure, then compare mapping.
 - Bowtie1: rRNA filter (`--un` keeps desired reads) → genome align (`-v 2 -m 10 --best --strata`), then sort/index BAM.
 - QC: `flagstat`, `idxstats`, deepTools correlation; generate CPM bigWig with `bamCoverage`.
-- If off-chrom/“isolated” hits appear, verify genome/rRNA/annotation assemblies match (mm10 vs mm9, hg38 vs hg19) and confirm poly(A) was trimmed.
+- If off-chrom hits appear, verify genome/rRNA/annotation assemblies match (mm10 vs mm9, hg38 vs hg19) and confirm poly(A) was trimmed.
 
 ## Core Commands (per sample)
 ```bash
@@ -35,13 +35,13 @@ samtools index sample.sorted.bam
 - Replicate concordance: deepTools `multiBamSummary` + `plotCorrelation`.
 - Coverage: `bamCoverage -b sample.sorted.bam -o sample.CPM.bw --normalizeUsing CPM --binSize 10` (unstranded unless library says otherwise).
 - Repeat enrich: intersect peaks with RepeatMasker BED; see reference.
-- Metaplot: deepTools `computeMatrix` + `plotProfile` over TSS/peaks.
+- Metaplot: deepTools `computeMatrix` + `plotProfile`; optionally `computeMatrixOperations filterValues --max 0.2` to drop outlier bins.
 - Motif: extract +/-50 bp around peaks, run MEME-ChIP or HOMER.
 
 ## Troubleshooting
-- Off-chrom/“isolated gene” spikes: usually assembly mismatch (mm9/mm10, hg19/hg38) or untrimmed poly(A); realign with consistent indexes and confirm trimming.
+- Off-chrom spikes: usually assembly mismatch (mm9/mm10, hg19/hg38) or untrimmed poly(A); realign with consistent indexes and confirm trimming.
 - Low unique mapping: check adapter correctness, ensure rRNA FASTA matches species, and confirm `-m 10` isn’t over-filtering very repetitive regions.
 - Strand assumptions: LACE-seq often treated as unstranded; only make stranded tracks if protocol notes specify.
 
 ## Reference
-- Detailed, commented pipeline (trim variants, rRNA/genome map), repeat enrichment, metaplot, motif steps, SLURM script, and pitfalls: [references/pipeline.md](references/pipeline.md)
+- Detailed pipeline (trim variants, rRNA/genome map), repeat enrichment, metaplot with outlier filtering, motif steps, SLURM script, and pitfalls: [references/pipeline.md](references/pipeline.md)

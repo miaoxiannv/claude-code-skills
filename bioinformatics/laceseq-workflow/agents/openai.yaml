@@ -1,0 +1,4 @@
+interface:
+  display_name: "LACE-seq Workflow"
+  short_description: "Trim adapters/polyA, remove rRNA, map LACE-seq reads."
+  default_prompt: "Use for LACE/PARN-LACE-seq preprocessing: cutadapt (3' adapter+polyA+optional 4bp UMI), Bowtie rRNA filter, genome alignment, and QC outputs."

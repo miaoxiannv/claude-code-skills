@@ -8,6 +8,7 @@ A small, personal collection of Codex/Claude skills. Each skill lives in its own
 
 ## Available Skills
 - **clipseq-workflow** (`bioinformatics/clipseq-workflow/SKILL.md`): end‑to‑end CLIP/eCLIP processing from raw FASTQ to peaks/motifs—QC, adapter/UMI handling, alignment, UMI deduplication, peak calling (PEAKachu/PureCLIP), tracks, and motif/annotation tips.
+- **laceseq-workflow** (`bioinformatics/laceseq-workflow/SKILL.md`): LACE/PARN-LACE-seq preprocessing and analysis—adapter/polyA trimming (cutadapt), Bowtie rRNA filtering and genome mapping, QC/coverage, repeat enrichment, metaplot generation with outlier filtering, and motif discovery.
 
 ## Using a Skill
 1) Open the relevant `SKILL.md` to follow the outlined steps and command templates.
